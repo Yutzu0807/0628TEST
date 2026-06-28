@@ -259,6 +259,103 @@
       font-weight: 900;
     }
 
+    .cutscene {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      overflow: hidden;
+      color: white;
+      background: #03050b;
+      cursor: pointer;
+    }
+    .cutscene.show { display: block; animation: scene-fade .7s ease; }
+    .scene-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      transition: opacity .42s ease, transform 7s linear;
+    }
+    .cutscene.changing .scene-image { opacity: 0; }
+    .cutscene.show .scene-image { transform: scale(1.035); }
+    .scene-shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(3,5,11,.22), transparent 35%, rgba(3,5,11,.3) 58%, rgba(3,5,11,.94));
+      pointer-events: none;
+    }
+    .ending-title {
+      position: absolute;
+      z-index: 2;
+      top: clamp(18px, 5vh, 50px);
+      left: 50%;
+      padding: 12px 25px;
+      color: #ffe77f;
+      text-align: center;
+      text-shadow: 3px 3px #571e18, 0 0 18px rgba(255,211,92,.65);
+      font-size: clamp(1.1rem, 3.2vw, 2rem);
+      font-weight: 1000;
+      line-height: 1.45;
+      letter-spacing: .08em;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+    .narration {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      bottom: clamp(32px, 7vh, 72px);
+      width: min(900px, calc(100% - 34px));
+      padding: clamp(15px, 3vw, 24px);
+      border: 2px solid rgba(255,211,92,.72);
+      border-radius: 8px;
+      background: rgba(5,8,17,.83);
+      box-shadow: 0 12px 35px rgba(0,0,0,.5);
+      text-align: center;
+      transform: translateX(-50%);
+    }
+    .narration p {
+      margin: 4px 0;
+      font-size: clamp(.95rem, 2.4vw, 1.35rem);
+      font-weight: 700;
+      line-height: 1.7;
+      text-shadow: 2px 2px #000;
+    }
+    .scene-meta {
+      margin-top: 10px;
+      color: #c5cbe0;
+      font-size: .72rem;
+      letter-spacing: .12em;
+    }
+    .final-card {
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      visibility: hidden;
+      background: rgba(3,5,11,.67);
+      text-align: center;
+      transition: opacity 1.4s ease, visibility 1.4s;
+    }
+    .cutscene.final .narration, .cutscene.final .ending-title { opacity: 0; transition: opacity .7s; }
+    .cutscene.final .final-card { opacity: 1; visibility: visible; }
+    .final-card h2 {
+      margin: 0;
+      color: #ffe77f;
+      font-size: clamp(2rem, 7vw, 4.7rem);
+      line-height: 1.45;
+      text-shadow: 4px 4px #62251e, 0 0 30px rgba(255,211,92,.7);
+    }
+    .final-card p {
+      margin: 24px 0 0;
+      color: #f5f0dc;
+      font-size: clamp(.9rem, 2.5vw, 1.35rem);
+      line-height: 1.8;
+    }
+
     @keyframes stamp-in { from { opacity: 0; transform: scale(1.7) rotate(-25deg); } }
     @keyframes wrong {
       0%,100% { transform: translateX(0); background: rgba(7,10,21,.48); }
@@ -266,6 +363,7 @@
       50% { transform: translateX(6px); }
     }
     @keyframes victory { from { transform: scale(.85); opacity: 0; } }
+    @keyframes scene-fade { from { opacity: 0; } }
 
     @media (max-width: 650px) {
       .info { top: 7px; right: 7px; gap: 5px; padding: 5px 5px 5px 9px; font-size: .75rem; }
@@ -324,6 +422,23 @@
     </div>
   </div>
 
+  <div class="cutscene" id="cutscene" role="button" tabindex="0" aria-label="點擊前往下一幕">
+    <img class="scene-image" id="scene-image" src="ending-1.png" alt="">
+    <div class="scene-shade"></div>
+    <div class="ending-title" id="ending-title">★★★★★★★★★★<br>挑戰成功啦！！！！！<br>★★★★★★★★★★</div>
+    <div class="narration">
+      <p id="line-one"></p>
+      <p id="line-two"></p>
+      <div class="scene-meta"><span id="scene-count">1 / 4</span>・點擊畫面繼續</div>
+    </div>
+    <div class="final-card">
+      <div>
+        <h2>★★★★★<br>冒險完成<br>★★★★★</h2>
+        <p>感謝你的挑戰。<br>願下一次冒險，我們再次相遇。</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     (() => {
       "use strict";
@@ -337,7 +452,16 @@
       const modalCard = document.querySelector("#modal-card");
       const badgesEl = document.querySelector("#badges");
       const hint = document.querySelector("#hint");
+      const cutscene = document.querySelector("#cutscene");
+      const sceneImage = document.querySelector("#scene-image");
+      const SCENES = [
+        ["ending-1.png", "當最後一道封印解除，旅程終於迎來答案。", "真正的寶藏，不只是終點，而是一路走來的勇氣。"],
+        ["ending-2.png", "每一道難關，都化作前進的腳步。", "每一次思考，都點亮了一片新的風景。"],
+        ["ending-3.png", "故事沒有真正的句點。", "每一次啟程，都將成為下一段傳說的開始。"],
+        ["ending-4.png", "世界依然遼闊。", "當下一位冒險者出發時，新的故事，也將再次展開。"]
+      ];
       let placed = new Set(), draggedBadge = null, ghost = null;
+      let sceneIndex = 0, sceneLocked = false, endingTimer = null;
 
       function hasCert(key) {
         const value = localStorage.getItem(key);
@@ -407,7 +531,7 @@
           badge.classList.add("placed");
           placed.add(badge.dataset.cert);
           hint.textContent = `已放入 ${placed.size} / 3 枚憑證`;
-          if (placed.size === 3) setTimeout(showVictory, 420);
+          if (placed.size === 3) setTimeout(startCutscene, 420);
         } else {
           slot.classList.remove("wrong");
           void slot.offsetWidth;
@@ -479,6 +603,48 @@
         const minutes = Math.floor(total / 60), seconds = total % 60;
         document.querySelector("#duration").textContent = `${String(minutes).padStart(2,"0")} 分 ${String(seconds).padStart(2,"0")} 秒`;
         modalCard.classList.add("victory-mode");
+        modal.classList.add("show");
+      }
+
+      function renderScene() {
+        const [image, first, second] = SCENES[sceneIndex];
+        sceneImage.src = image;
+        sceneImage.alt = `結局過場第 ${sceneIndex + 1} 幕`;
+        document.querySelector("#line-one").textContent = `「${first}」`;
+        document.querySelector("#line-two").textContent = `「${second}」`;
+        document.querySelector("#scene-count").textContent = `${sceneIndex + 1} / 4`;
+        document.querySelector("#ending-title").style.display = sceneIndex === 0 ? "" : "none";
+      }
+
+      function startCutscene() {
+        modal.classList.remove("show");
+        sceneIndex = 0;
+        sceneLocked = false;
+        cutscene.classList.remove("final","changing");
+        renderScene();
+        cutscene.classList.add("show");
+        cutscene.focus();
+      }
+
+      function advanceCutscene() {
+        if (!cutscene.classList.contains("show") || sceneLocked) return;
+        if (sceneIndex < SCENES.length - 1) {
+          sceneLocked = true;
+          cutscene.classList.add("changing");
+          setTimeout(() => {
+            sceneIndex++;
+            renderScene();
+            cutscene.classList.remove("changing");
+            sceneLocked = false;
+          }, 420);
+        } else {
+          sceneLocked = true;
+          cutscene.classList.add("final");
+          endingTimer = setTimeout(() => {
+            cutscene.classList.remove("show","final");
+            showVictory();
+          }, 5000);
+        }
       }
 
       function clearProgress(includeSession) {
@@ -496,6 +662,13 @@
       document.addEventListener("keydown", event => { if (event.key === "Escape") modal.classList.remove("show"); });
       document.querySelector("#reset").addEventListener("click", () => clearProgress(false));
       document.querySelector("#again").addEventListener("click", () => clearProgress(true));
+      cutscene.addEventListener("click", advanceCutscene);
+      cutscene.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          advanceCutscene();
+        }
+      });
       window.addEventListener("pageshow", refresh);
       initCover();
       refresh();

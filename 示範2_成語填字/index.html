@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="國中成語填字拖曳練習">
+  <title>成語填字｜國文練習</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&display=swap");
+
+    :root {
+      --ink: #28291f;
+      --paper: #f5edcf;
+      --paper-deep: #e8d9aa;
+      --bamboo: #789978;
+      --bamboo-dark: #45694d;
+      --red: #ae3d32;
+      --red-bright: #d85043;
+      --green: #4c8a5d;
+      --wood: #ead49a;
+      --muted: #716d59;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      color: var(--ink);
+      font-family: "Noto Serif TC", "DFKai-SB", serif;
+      background:
+        linear-gradient(rgba(218,235,209,.82), rgba(218,235,209,.82)),
+        repeating-linear-gradient(90deg, transparent 0 72px, rgba(69,105,77,.12) 73px 76px),
+        #dcebd5;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      z-index: -1;
+      top: -8%;
+      bottom: -8%;
+      width: 130px;
+      opacity: .3;
+      background:
+        linear-gradient(90deg, transparent 47%, #466f51 48% 52%, transparent 53%),
+        repeating-linear-gradient(0deg, transparent 0 105px, #466f51 106px 110px);
+      transform: rotate(4deg);
+    }
+    body::before { left: 3%; }
+    body::after { right: 3%; transform: rotate(-5deg); }
+
+    button { font: inherit; }
+
+    .map-back {
+      position: fixed; z-index: 20; top: 12px; left: 12px;
+      padding: 8px 13px; border: 1px solid var(--bamboo-dark); border-radius: 4px;
+      color: #fff; background: rgba(69,105,77,.92);
+      text-decoration: none; font-size: .78rem; font-weight: 700;
+    }
+    .map-back:hover { filter: brightness(1.12); }
+
+    .game {
+      width: min(900px, 100%);
+      min-height: min(790px, calc(100vh - 48px));
+      margin: auto;
+      padding: clamp(22px, 5vw, 48px);
+      border: 1px solid rgba(83,74,49,.24);
+      border-radius: 5px;
+      background:
+        radial-gradient(circle at 22% 18%, rgba(126,106,55,.06) 0 1px, transparent 2px),
+        radial-gradient(circle at 74% 68%, rgba(126,106,55,.05) 0 1px, transparent 2px),
+        linear-gradient(rgba(245,237,207,.97), rgba(245,237,207,.97));
+      background-size: 17px 19px, 23px 29px, auto;
+      box-shadow: 0 24px 70px rgba(50,70,47,.22), inset 0 0 55px rgba(119,94,43,.07);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(83,74,49,.2);
+    }
+
+    .seal {
+      display: inline-grid;
+      place-items: center;
+      width: 35px;
+      aspect-ratio: 1;
+      margin-right: 8px;
+      border: 2px solid var(--red);
+      color: var(--red);
+      font-size: .8rem;
+      font-weight: 900;
+      line-height: 1;
+      vertical-align: middle;
+      transform: rotate(-3deg);
+    }
+
+    h1 {
+      display: inline;
+      margin: 0;
+      font-size: clamp(1.65rem, 5vw, 2.55rem);
+      letter-spacing: .15em;
+    }
+
+    .subtitle { margin: 7px 0 0 46px; color: var(--muted); font-size: .78rem; letter-spacing: .12em; }
+
+    .progress-box { min-width: 150px; text-align: right; }
+    .progress-label { color: var(--muted); font-size: .75rem; }
+    .progress-count { color: var(--bamboo-dark); font-size: 1.35rem; font-weight: 900; }
+    .progress-line { width: 150px; height: 5px; margin-top: 7px; border-radius: 9px; background: rgba(69,105,77,.15); overflow: hidden; }
+    .progress-bar { width: 20%; height: 100%; background: var(--bamboo); transition: width .35s; }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      min-height: 255px;
+      padding: 34px 0 26px;
+      text-align: center;
+    }
+
+    .prompt-label { margin-bottom: 17px; color: var(--muted); font-size: .8rem; letter-spacing: .18em; }
+
+    .idiom {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: clamp(7px, 2.4vw, 18px);
+    }
+
+    .fixed-char, .slot {
+      width: clamp(56px, 13vw, 86px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      font-weight: 900;
+    }
+
+    .slot {
+      position: relative;
+      border: 3px solid var(--red);
+      color: rgba(174,61,50,.32);
+      background:
+        linear-gradient(45deg, transparent calc(50% - .5px), rgba(174,61,50,.25) 50%, transparent calc(50% + .5px)),
+        linear-gradient(-45deg, transparent calc(50% - .5px), rgba(174,61,50,.25) 50%, transparent calc(50% + .5px)),
+        linear-gradient(90deg, transparent calc(50% - .5px), rgba(174,61,50,.22) 50%, transparent calc(50% + .5px)),
+        linear-gradient(0deg, transparent calc(50% - .5px), rgba(174,61,50,.22) 50%, transparent calc(50% + .5px));
+      transition: transform .16s, box-shadow .16s, background .16s;
+    }
+
+    .slot::before { content: "□"; opacity: .24; }
+    .slot.drag-over { transform: scale(1.07); box-shadow: 0 0 0 5px rgba(174,61,50,.13); }
+    .slot.filled {
+      color: var(--red);
+      background: rgba(255,250,226,.7);
+      animation: stamp .35s cubic-bezier(.2,.9,.3,1.25);
+    }
+    .slot.filled::before { content: ""; }
+    .slot.wrong { animation: wrong .2s ease; }
+
+    .bank-wrap {
+      padding: 18px;
+      border-top: 1px solid rgba(83,74,49,.18);
+      border-bottom: 1px solid rgba(83,74,49,.18);
+      background: rgba(230,214,170,.24);
+    }
+
+    .bank-title { margin: 0 0 13px; color: var(--muted); font-size: .78rem; text-align: center; letter-spacing: .14em; }
+
+    .bank {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 10px;
+      min-height: 112px;
+    }
+
+    .char-card {
+      min-width: 0;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid #b69452;
+      border-radius: 5px;
+      color: #2d281d;
+      background:
+        repeating-linear-gradient(100deg, transparent 0 8px, rgba(133,93,35,.035) 9px 10px),
+        linear-gradient(135deg, #f5e8bc, var(--wood));
+      box-shadow: 0 3px 6px rgba(77,61,31,.16), inset 0 1px rgba(255,255,255,.65);
+      cursor: grab;
+      touch-action: none;
+      font-size: clamp(1.15rem, 4vw, 1.75rem);
+      font-weight: 900;
+      transition: transform .14s, opacity .14s;
+    }
+
+    .char-card:hover { transform: translateY(-3px); }
+    .char-card.dragging { opacity: .28; }
+    .char-card.used {
+      opacity: .16;
+      pointer-events: none;
+      transform: scale(.86);
+    }
+
+    .touch-ghost {
+      position: fixed;
+      z-index: 50;
+      width: 62px;
+      height: 62px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--red);
+      border-radius: 5px;
+      color: var(--ink);
+      background: var(--wood);
+      box-shadow: 0 12px 25px rgba(0,0,0,.25);
+      pointer-events: none;
+      font-size: 1.8rem;
+      font-weight: 900;
+      transform: translate(-50%, -65%) rotate(3deg);
+    }
+
+    .feedback {
+      min-height: 135px;
+      display: grid;
+      place-items: center;
+      padding-top: 22px;
+      text-align: center;
+    }
+
+    .feedback-content { opacity: 0; transform: translateY(8px); transition: .3s; pointer-events: none; }
+    .feedback.show .feedback-content { opacity: 1; transform: none; pointer-events: auto; }
+    .correct-title { color: var(--green); font-size: 1.35rem; font-weight: 900; }
+    .meaning { max-width: 620px; margin: 6px auto 14px; color: var(--muted); font-size: .9rem; }
+
+    .next, .restart {
+      border: 0;
+      border-radius: 4px;
+      padding: 9px 25px;
+      color: #fff9e8;
+      background: var(--bamboo-dark);
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: .1em;
+    }
+    .next:hover, .restart:hover { filter: brightness(1.12); }
+
+    .result {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      background: rgba(49,67,47,.78);
+      backdrop-filter: blur(7px);
+      transition: .3s;
+    }
+    .result.show { opacity: 1; visibility: visible; }
+    .result-card {
+      width: min(460px, 100%);
+      padding: 40px 30px;
+      border: 9px double #b63f35;
+      color: var(--ink);
+      text-align: center;
+      background: var(--paper);
+      box-shadow: 0 25px 70px rgba(0,0,0,.3);
+    }
+    .result-card h2 { margin: 8px 0; color: var(--red); font-size: 2rem; }
+    .result-score { margin: 18px 0 25px; font-size: 1.15rem; }
+    .result-score b { color: var(--bamboo-dark); font-size: 2.4rem; }
+
+    @keyframes stamp {
+      0% { transform: scale(1.35) rotate(-7deg); opacity: .25; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    @keyframes wrong {
+      0%, 100% { background-color: transparent; transform: translateX(0); }
+      30% { background-color: rgba(216,80,67,.35); transform: translateX(-5px); box-shadow: 0 0 16px var(--red-bright); }
+      70% { background-color: rgba(216,80,67,.35); transform: translateX(5px); }
+    }
+
+    @media (max-width: 680px) {
+      body { padding: 10px; }
+      .game { min-height: calc(100vh - 20px); padding: 20px 14px; }
+      header { align-items: center; }
+      .subtitle { display: none; }
+      .progress-box { min-width: 110px; }
+      .progress-line { width: 110px; }
+      .stage { min-height: 220px; padding-top: 26px; }
+      .bank { grid-template-columns: repeat(5, 1fr); gap: 7px; }
+      .bank-wrap { padding: 13px 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="map-back" href="../大冒險地圖/index.html">← 回到大地圖</a>
+  <main class="game">
+    <header>
+      <div>
+        <span class="seal">文</span><h1>成語填字</h1>
+        <p class="subtitle">拖曳字卡・補全成語・理解語意</p>
+      </div>
+      <div class="progress-box">
+        <div class="progress-label">本局進度</div>
+        <div class="progress-count">第 <span id="question-no">1</span>／5 題</div>
+        <div class="progress-line"><div class="progress-bar" id="progress-bar"></div></div>
+      </div>
+    </header>
+
+    <section class="stage">
+      <div>
+        <div class="prompt-label">請將正確字卡拖入米字格</div>
+        <div class="idiom" id="idiom" aria-label="待完成的成語"></div>
+      </div>
+    </section>
+
+    <section class="bank-wrap">
+      <h2 class="bank-title">候選字卡</h2>
+      <div class="bank" id="bank"></div>
+    </section>
+
+    <section class="feedback" id="feedback" aria-live="polite">
+      <div class="feedback-content">
+        <div class="correct-title">✓ 答對！</div>
+        <p class="meaning" id="meaning"></p>
+        <button class="next" id="next" type="button">下一題</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="result" id="result" role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div class="result-card">
+      <div class="seal">成</div>
+      <h2 id="result-title">挑戰完成</h2>
+      <p>五則成語都已順利補全！</p>
+      <div class="result-score">總成績<br><b id="final-score">100</b> 分</div>
+      <button class="restart" id="restart" type="button">重新挑戰</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const QUESTIONS = [
+        { 成語: "一鳴驚人", 缺字: [1, 2], 答案: ["鳴", "驚"], 意思: "比喻平時默默無聞，突然有驚人表現。" },
+        { 成語: "風花雪月", 缺字: [1, 3], 答案: ["花", "月"], 意思: "原指四時景色，後比喻浮華空洞的詩文。" },
+        { 成語: "三番五次", 缺字: [1, 3], 答案: ["番", "次"], 意思: "形容次數很多。" },
+        { 成語: "一字千金", 缺字: [1, 3], 答案: ["字", "金"], 意思: "形容文字價值極高。" },
+        { 成語: "畫龍點睛", 缺字: [1, 3], 答案: ["龍", "睛"], 意思: "比喻在關鍵處點明要旨，使內容更加生動有力。" },
+        { 成語: "守株待兔", 缺字: [1, 3], 答案: ["株", "兔"], 意思: "比喻拘泥成法或妄想不勞而獲。" },
+        { 成語: "亡羊補牢", 缺字: [1, 3], 答案: ["羊", "牢"], 意思: "比喻出了問題後設法補救，仍不算太遲。" },
+        { 成語: "刻舟求劍", 缺字: [1, 3], 答案: ["舟", "劍"], 意思: "比喻拘泥固執，不知隨情勢變化而調整。" },
+        { 成語: "胸有成竹", 缺字: [1, 3], 答案: ["有", "竹"], 意思: "比喻做事之前已有完整的計畫與把握。" },
+        { 成語: "雪中送炭", 缺字: [1, 3], 答案: ["中", "炭"], 意思: "比喻在人急需時給予適時的幫助。" },
+        { 成語: "杯弓蛇影", 缺字: [1, 2], 答案: ["弓", "蛇"], 意思: "比喻因疑神疑鬼而產生恐懼。" },
+        { 成語: "井底之蛙", 缺字: [1, 3], 答案: ["底", "蛙"], 意思: "比喻見識狹小的人。" }
+      ];
+
+      const DISTRACTORS = "山水天地人物日星雲海春秋東西南北心手口目石木林火雨風雷電書文學志道德義勇智善樂夢光明高遠深行知思言";
+      const TOTAL = 5;
+      const idiomEl = document.querySelector("#idiom");
+      const bankEl = document.querySelector("#bank");
+      const feedbackEl = document.querySelector("#feedback");
+      const meaningEl = document.querySelector("#meaning");
+      const nextBtn = document.querySelector("#next");
+      const resultEl = document.querySelector("#result");
+      const restartBtn = document.querySelector("#restart");
+      const questionNoEl = document.querySelector("#question-no");
+      const progressBar = document.querySelector("#progress-bar");
+      const finalScoreEl = document.querySelector("#final-score");
+
+      let round = [];
+      let current = 0;
+      let correctQuestions = 0;
+      let filled = new Set();
+      let draggedCard = null;
+      let touchGhost = null;
+      let audioContext = null;
+
+      function shuffle(items) {
+        const copy = [...items];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function getAudio() {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioClass) return null;
+        audioContext ||= new AudioClass();
+        if (audioContext.state === "suspended") audioContext.resume();
+        return audioContext;
+      }
+
+      function bell() {
+        const context = getAudio();
+        if (!context) return;
+        [880, 1320].forEach((frequency, index) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          const start = context.currentTime + index * .055;
+          oscillator.type = "sine";
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(.0001, start);
+          gain.gain.exponentialRampToValueAtTime(.12, start + .01);
+          gain.gain.exponentialRampToValueAtTime(.0001, start + .28);
+          oscillator.connect(gain).connect(context.destination);
+          oscillator.start(start);
+          oscillator.stop(start + .3);
+        });
+      }
+
+      function newGame() {
+        round = shuffle(QUESTIONS).slice(0, TOTAL);
+        current = 0;
+        correctQuestions = 0;
+        resultEl.classList.remove("show");
+        showQuestion();
+      }
+
+      function showQuestion() {
+        const question = round[current];
+        filled = new Set();
+        feedbackEl.classList.remove("show");
+        questionNoEl.textContent = current + 1;
+        progressBar.style.width = `${(current + 1) / TOTAL * 100}%`;
+        idiomEl.replaceChildren();
+        bankEl.replaceChildren();
+
+        [...question.成語].forEach((char, index) => {
+          if (question.缺字.includes(index)) {
+            const answerIndex = question.缺字.indexOf(index);
+            const slot = document.createElement("div");
+            slot.className = "slot";
+            slot.dataset.answer = question.答案[answerIndex];
+            slot.dataset.slot = answerIndex;
+            slot.setAttribute("aria-label", `第 ${index + 1} 字空格`);
+            addDropEvents(slot);
+            idiomEl.append(slot);
+          } else {
+            const fixed = document.createElement("div");
+            fixed.className = "fixed-char";
+            fixed.textContent = char;
+            idiomEl.append(fixed);
+          }
+        });
+
+        const excluded = new Set([...question.成語]);
+        const distractors = shuffle([...new Set([...DISTRACTORS])].filter(char => !excluded.has(char))).slice(0, 13);
+        shuffle([...question.答案, ...distractors]).forEach((char, index) => {
+          bankEl.append(makeCard(char, index));
+        });
+      }
+
+      function makeCard(char, index) {
+        const card = document.createElement("div");
+        card.className = "char-card";
+        card.textContent = char;
+        card.draggable = true;
+        card.dataset.char = char;
+        card.id = `card-${current}-${index}`;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `字卡：${char}`);
+
+        card.addEventListener("dragstart", event => {
+          draggedCard = card;
+          event.dataTransfer.setData("text/plain", card.id);
+          event.dataTransfer.effectAllowed = "move";
+          requestAnimationFrame(() => card.classList.add("dragging"));
+        });
+        card.addEventListener("dragend", () => {
+          card.classList.remove("dragging");
+          draggedCard = null;
+          document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+        });
+        card.addEventListener("pointerdown", startTouchDrag);
+        return card;
+      }
+
+      function addDropEvents(slot) {
+        slot.addEventListener("dragover", event => {
+          if (slot.classList.contains("filled")) return;
+          event.preventDefault();
+          slot.classList.add("drag-over");
+          event.dataTransfer.dropEffect = "move";
+        });
+        slot.addEventListener("dragleave", () => slot.classList.remove("drag-over"));
+        slot.addEventListener("drop", event => {
+          event.preventDefault();
+          slot.classList.remove("drag-over");
+          const card = document.getElementById(event.dataTransfer.getData("text/plain")) || draggedCard;
+          attemptDrop(card, slot);
+        });
+      }
+
+      function attemptDrop(card, slot) {
+        if (!card || !slot || slot.classList.contains("filled") || card.classList.contains("used")) return;
+        if (card.dataset.char === slot.dataset.answer) {
+          slot.textContent = card.dataset.char;
+          slot.classList.add("filled");
+          card.classList.add("used");
+          filled.add(slot.dataset.slot);
+          bell();
+          if (filled.size === round[current].缺字.length) {
+            correctQuestions++;
+            meaningEl.textContent = round[current].意思;
+            nextBtn.textContent = current === TOTAL - 1 ? "查看成績" : "下一題";
+            setTimeout(() => feedbackEl.classList.add("show"), 250);
+          }
+        } else {
+          slot.classList.remove("wrong");
+          void slot.offsetWidth;
+          slot.classList.add("wrong");
+          setTimeout(() => slot.classList.remove("wrong"), 200);
+        }
+      }
+
+      function startTouchDrag(event) {
+        if (event.pointerType === "mouse") return;
+        const card = event.currentTarget;
+        if (card.classList.contains("used")) return;
+        event.preventDefault();
+        getAudio();
+        draggedCard = card;
+        card.classList.add("dragging");
+        card.setPointerCapture(event.pointerId);
+
+        touchGhost = document.createElement("div");
+        touchGhost.className = "touch-ghost";
+        touchGhost.textContent = card.dataset.char;
+        document.body.append(touchGhost);
+        moveGhost(event);
+
+        card.addEventListener("pointermove", moveGhost);
+        card.addEventListener("pointerup", endTouchDrag, { once: true });
+        card.addEventListener("pointercancel", endTouchDrag, { once: true });
+      }
+
+      function moveGhost(event) {
+        if (!touchGhost) return;
+        touchGhost.style.left = `${event.clientX}px`;
+        touchGhost.style.top = `${event.clientY}px`;
+        touchGhost.hidden = true;
+        const below = document.elementFromPoint(event.clientX, event.clientY);
+        touchGhost.hidden = false;
+        document.querySelectorAll(".slot.drag-over").forEach(slot => slot.classList.remove("drag-over"));
+        below?.closest(".slot:not(.filled)")?.classList.add("drag-over");
+      }
+
+      function endTouchDrag(event) {
+        const card = event.currentTarget;
+        card.removeEventListener("pointermove", moveGhost);
+        touchGhost?.remove();
+        touchGhost = null;
+        card.classList.remove("dragging");
+        const slot = document.elementFromPoint(event.clientX, event.clientY)?.closest(".slot:not(.filled)");
+        document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+        attemptDrop(card, slot);
+        draggedCard = null;
+      }
+
+      nextBtn.addEventListener("click", () => {
+        if (current < TOTAL - 1) {
+          current++;
+          showQuestion();
+        } else {
+          localStorage.setItem("cert_idiom", "true");
+          finalScoreEl.textContent = correctQuestions * 20;
+          resultEl.classList.add("show");
+          restartBtn.focus();
+        }
+      });
+
+      restartBtn.addEventListener("click", newGame);
+      document.addEventListener("pointerdown", getAudio, { once: true, capture: true });
+      newGame();
+    })();
+  </script>
+</body>
+</html>

@@ -417,7 +417,7 @@
         <div class="trophy">🏆</div>
         <h2>冒險完成！</h2>
         <p class="duration">總冒險時長<b id="duration">00 分 00 秒</b></p>
-        <button class="again" id="again" type="button">再次冒險</button>
+        <button class="again" id="again" type="button">重新遊戲</button>
       </div>
     </div>
   </div>
@@ -491,6 +491,10 @@
       }
 
       function openGate() {
+        if (CERTS.every(cert => hasCert(cert.key))) {
+          startCutscene();
+          return;
+        }
         placed = new Set();
         modalCard.classList.remove("victory-mode");
         document.querySelectorAll(".slot").forEach(slot => slot.classList.remove("filled","wrong","drag-over"));
